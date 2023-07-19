@@ -3236,6 +3236,50 @@ struct ShapeMapper : public OpMapperBase<TfLiteShapeParams> {
   }
 };
 
+struct TfLiteLayerNormParams {
+  int axis;
+};
+
+struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
+  bool HandleMapOp(vx::delegate::Delegate* delegate,
+                   std::vector<std::shared_ptr<tim::vx::Tensor>>& inputs,
+                   std::vector<std::shared_ptr<tim::vx::Tensor>>& outputs,
+                   const void* params) override {
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
+    const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
+    auto axis = 0;//builtin->axis;
+    auto eps = 1e-6;
+    auto op =
+        delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
+
+    std::vector<uint32_t> shape=inputs[1]->GetShape();
+
+    std::vector<float> gamma(shape[0], 1.0f);
+    std::vector<float> beta(shape[0], 0.0f);
+
+    tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
+                                   {shape[0]},
+                                   tim::vx::TensorAttribute::CONSTANT);
+
+    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
+    auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, beta.data());
+
+    std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
+      inputs[0],
+      gamma_tensor,
+      beta_tensor
+    };
+
+
+    (*op).BindInputs(input_tensors);
+    (*op).BindOutputs(outputs);
+
+    delegate->GetOps().push_back(std::move(op));
+
+    return true;
+  }
+};
+
 using createIOpMapItemFunc = std::function<std::unique_ptr<IOpMapper>()>;
 static const std::map<int, createIOpMapItemFunc> reg = {
 #define REGISTER_OP_MAPPER(TFLITE_OP_CODE, MAPPER_TYPE, ...)                  \
@@ -3393,7 +3437,7 @@ static const std::map<int, createIOpMapItemFunc> reg = {
     REGISTER_OP_MAPPER(kTfLiteBuiltinConv3d, Conv3dMapper),
     REGISTER_OP_MAPPER(kTfLiteBuiltinShape, ShapeMapper),
     REGISTER_OP_MAPPER(kTfLiteBuiltinHashtableLookup, HashtableLookup),
-
+    REGISTER_OP_MAPPER(kTfLiteBuiltinCustom, LayerNormMapper),
 #undef REGISTER_OP_MAPPER
 };
 
