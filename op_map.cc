@@ -3239,7 +3239,27 @@ struct ShapeMapper : public OpMapperBase<TfLiteShapeParams> {
 struct TfLiteLayerNormParams {
   int axis;
 };
+/*
+  auto input_type = inputs[0]->GetDataType();
+  auto input_quant = inputs[0]->GetQuantization();
+  uint32_t kernel_size = kernel_h * kernel_w * channel * channel;
+  std::vector<uint8_t> weight_quant_data(kernel_size);
 
+  if (input_quant.Type() == tim::vx::QuantType::ASYMMETRIC) {
+    float scale = input_quant.Scales()[0];
+    int32_t zp = input_quant.ZeroPoints()[0];
+    if (input_type == tim::vx::DataType::INT8) {
+      std::vector<int8_t> quant_i8;
+      vx::delegate::utils::Quantize<int8_t>(weight_data, scale, zp, quant_i8);
+      weight_spec.SetDataType(tim::vx::DataType::INT8);
+      memcpy(weight_quant_data.data(), quant_i8.data(), kernel_size);
+    } else if (input_type == tim::vx::DataType::UINT8) {
+      std::vector<uint8_t> quant_u8;
+      vx::delegate::utils::Quantize<uint8_t>(weight_data, scale, zp, quant_u8);
+      weight_spec.SetDataType(tim::vx::DataType::UINT8);
+      memcpy(weight_quant_data.data(), quant_u8.data(), kernel_size);
+    }
+*/
 struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
   bool HandleMapOp(vx::delegate::Delegate* delegate,
                    std::vector<std::shared_ptr<tim::vx::Tensor>>& inputs,
@@ -3253,12 +3273,27 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
     std::vector<uint32_t> shape=inputs[1]->GetShape();
+    auto gamma_input_quant = inputs[1]->GetQuantization();
+    float gamma_scale = gamma_input_quant.Scales()[0];
+    int32_t gamma_zp = gamma_input_quant.ZeroPoints()[0];
+    std::vector<uint8_t> buffer(gammabeta_len);
 
-    std::vector<float> gamma(shape[0], 1.0f);
-    std::vector<float> beta(shape[0], 0.0f);
+    input[1].CopyDataFromTensor(buffer.data());
+    const auto gammabeta_len = shape[0];
+    std::vector<float> gamma(gammabeta_len);
+
+
+    std::transform(buffer, buffer+gammabeta_len,gamma, [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
+    //std::vector<float> gamma(shape[0], 1.0f);
+    //std::vector<float> beta(shape[0], 0.0f);
+
+
+
+
+    std::vector<float> beta(gammabeta_len, 0.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
-                                   {shape[0]},
+                                   {gammabeta_len},
                                    tim::vx::TensorAttribute::CONSTANT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
