@@ -3264,8 +3264,9 @@ struct TfLiteLayerNormParams {
 std::vector<float> Dequantise(std::shared_ptr<tim::vx::Tensor> t, size_t length)
 {
   auto input_quant = t->GetQuantization();
-  float gamma_scale = gamma_input_quant.Scales()[0];
-  int32_t gamma_zp = gamma_input_quant.ZeroPoints()[0];
+  TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Number of scales %zu", input_quant.Scales().size());
+  float scale = input_quant.Scales()[0];
+  int32_t zp = input_quant.ZeroPoints()[0];
   std::vector<uint8_t> buffer(length);
   t->->CopyDataFromTensor(buffer.data());
   std::vector<float> float_data(length);
