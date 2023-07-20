@@ -3260,6 +3260,20 @@ struct TfLiteLayerNormParams {
       memcpy(weight_quant_data.data(), quant_u8.data(), kernel_size);
     }
 */
+
+std::vector<float> Dequantise(std::shared_ptr<tim::vx::Tensor> t, size_t length)
+{
+  auto input_quant = t->GetQuantization();
+  float gamma_scale = gamma_input_quant.Scales()[0];
+  int32_t gamma_zp = gamma_input_quant.ZeroPoints()[0];
+  std::vector<uint8_t> buffer(length);
+  t->->CopyDataFromTensor(buffer.data());
+  std::vector<float> float_data(length);
+  std::transform(buffer.begin(), buffer.end(),float_data.begin(), [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
+
+  return float_data;
+}
+
 struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
   bool HandleMapOp(vx::delegate::Delegate* delegate,
                    std::vector<std::shared_ptr<tim::vx::Tensor>>& inputs,
@@ -3273,24 +3287,8 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
     std::vector<uint32_t> shape=inputs[1]->GetShape();
-    const auto gammabeta_len = shape[0];
-    auto gamma_input_quant = inputs[1]->GetQuantization();
-    float gamma_scale = gamma_input_quant.Scales()[0];
-    int32_t gamma_zp = gamma_input_quant.ZeroPoints()[0];
-    std::vector<uint8_t> buffer(gammabeta_len);
-
-    inputs[1]->CopyDataFromTensor(buffer.data());
-    std::vector<float> gamma(gammabeta_len);
-
-
-    std::transform(buffer.begin(), buffer.end(),gamma.begin(), [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
-    //std::vector<float> gamma(shape[0], 1.0f);
-    //std::vector<float> beta(shape[0], 0.0f);
-
-
-
-
-    std::vector<float> beta(gammabeta_len, 0.0f);
+auto gamma = Dequantise(inputs[1], shape[0]);
+auto beta = Dequantise(inputs[2], shape[0]);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {gammabeta_len},
