@@ -3279,7 +3279,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     int32_t gamma_zp = gamma_input_quant.ZeroPoints()[0];
     std::vector<uint8_t> buffer(gammabeta_len);
 
-    inputs[1].CopyDataFromTensor(buffer.data());
+    inputs[1]->CopyDataFromTensor(buffer.data());
     std::vector<float> gamma(gammabeta_len);
 
 
