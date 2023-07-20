@@ -3270,7 +3270,7 @@ std::vector<float> Dequantise(std::shared_ptr<tim::vx::Tensor> t, size_t length)
   std::vector<uint8_t> buffer(length);
   t->CopyDataFromTensor(buffer.data());
   std::vector<float> float_data(length);
-  std::transform(buffer.begin(), buffer.end(),float_data.begin(), [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
+  std::transform(buffer.begin(), buffer.end(),float_data.begin(), [zp, scale](auto a){return (static_cast<float>(a)-zp)*scale;});
 
   return float_data;
 }
