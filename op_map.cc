@@ -3268,7 +3268,7 @@ std::vector<float> Dequantise(std::shared_ptr<tim::vx::Tensor> t, size_t length)
   float scale = input_quant.Scales()[0];
   int32_t zp = input_quant.ZeroPoints()[0];
   std::vector<uint8_t> buffer(length);
-  t->->CopyDataFromTensor(buffer.data());
+  t->CopyDataFromTensor(buffer.data());
   std::vector<float> float_data(length);
   std::transform(buffer.begin(), buffer.end(),float_data.begin(), [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
 
@@ -3292,7 +3292,7 @@ auto gamma = Dequantise(inputs[1], shape[0]);
 auto beta = Dequantise(inputs[2], shape[0]);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
-                                   {gammabeta_len},
+                                   {shape[0]},
                                    tim::vx::TensorAttribute::CONSTANT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
