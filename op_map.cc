@@ -3263,24 +3263,22 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
     std::vector<uint32_t> shape=inputs[1]->GetShape();
-/*
-    std::vector<float> gamma(shape[0], 1.0f);
-    std::vector<float> beta(shape[0], 0.0f);
 
-    tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
+    std::vector<float> gamma(shape[0], 1.0f);
+
+    tim::vx::TensorSpec gamma_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
                                    tim::vx::TensorAttribute::CONSTANT);
-*/
 
-    std::vector<uint16_t> gamma(shape[0], floatToHalf(1.0f));
+
     std::vector<uint16_t> beta(shape[0], floatToHalf(0.0f));
 
-    tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT16,
+    tim::vx::TensorSpec beta_spec(tim::vx::DataType::FLOAT16,
                                    {shape[0]},
                                    tim::vx::TensorAttribute::CONSTANT);
 
-    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
-    auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, beta.data());
+    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gamma_spec, gamma.data());
+    auto beta_tensor = delegate->GetGraph()->CreateTensor(beta_spec, beta.data());
 
     std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
       inputs[0],
