@@ -3283,7 +3283,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     std::vector<float> gamma(gammabeta_len);
 
 
-    std::transform(buffer, buffer+gammabeta_len,gamma, [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
+    std::transform(buffer.begin(), buffer.end(),gamma, [gamma_zp,gamma_scale](auto a){return (static_cast<float>(a)-gamma_zp)*gamma_scale;});
     //std::vector<float> gamma(shape[0], 1.0f);
     //std::vector<float> beta(shape[0], 0.0f);
 
