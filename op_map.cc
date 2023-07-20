@@ -3240,16 +3240,6 @@ struct TfLiteLayerNormParams {
   int axis;
 };
 
-// Custom function to convert a float to fp16
-uint16_t floatToHalf(float value) {
-    uint32_t floatValue = *(uint32_t*)(&value);
-    uint16_t sign = (floatValue >> 31) & 0x0001;
-    uint16_t exponent = ((floatValue >> 23) & 0x00FF) - 127 + 15;
-    uint16_t mantissa = (floatValue >> 13) & 0x03FF;
-
-    return (sign << 15) | (exponent << 10) | mantissa;
-}
-
 struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
   bool HandleMapOp(vx::delegate::Delegate* delegate,
                    std::vector<std::shared_ptr<tim::vx::Tensor>>& inputs,
@@ -3265,20 +3255,14 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     std::vector<uint32_t> shape=inputs[1]->GetShape();
 
     std::vector<float> gamma(shape[0], 1.0f);
+    std::vector<float> beta(shape[0], 0.0f);
 
-    tim::vx::TensorSpec gamma_spec(tim::vx::DataType::FLOAT32,
+    tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
                                    tim::vx::TensorAttribute::CONSTANT);
 
-
-    std::vector<uint16_t> beta(shape[0], floatToHalf(0.0f));
-
-    tim::vx::TensorSpec beta_spec(tim::vx::DataType::FLOAT16,
-                                   {shape[0]},
-                                   tim::vx::TensorAttribute::CONSTANT);
-
-    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gamma_spec, gamma.data());
-    auto beta_tensor = delegate->GetGraph()->CreateTensor(beta_spec, beta.data());
+    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
+    auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, beta.data());
 
     std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
       inputs[0],
