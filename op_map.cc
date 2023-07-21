@@ -3252,11 +3252,17 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     auto op =
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
-    std::vector<uint32_t> shape=inputs[1]->GetShape();
-    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Weights Shape: %d %d %d %d\n", shape[0], shape[1], shape[2], shape[3]);
+    std::vector<uint32_t> ishape=inputs[0]->GetShape();
+    std::vector<uint32_t> gshape=inputs[1]->GetShape();
+    std::vector<uint32_t> bshape=inputs[2]->GetShape();
+    std::vector<uint32_t> oshape=inputs[3]->GetShape();
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Inputs Shape: %d %d %d %d\n", ishape[0], ishape[1], ishape[2], ishape[3]);
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Gamma Shape: %d %d %d %d\n", gshape[0], gshape[1], gshape[2], gshape[3]);
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Beta Shape: %d %d %d %d\n", bshape[0], bshape[1], bshape[2], bshape[3]);
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Output Shape: %d %d %d %d\n", oshape[0], oshape[1], oshape[2], oshape[3]);
 
-    std::vector<float> gamma(shape[0], 1.0f);
-    std::vector<float> beta(shape[0], 0.0f);
+    std::vector<float> gamma(gshape[0], 1.0f);
+    std::vector<float> beta(gshape[0], 0.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
