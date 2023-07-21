@@ -3248,7 +3248,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
     auto axis = 0;//builtin->axis;
-    auto eps = 1e-6;
+    auto eps = 2e-5;
     auto op =
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
@@ -3265,7 +3265,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     std::vector<float> beta(gshape[0], 0.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
-                                   {shape[0]},
+                                   {gshape[0]},
                                    tim::vx::TensorAttribute::CONSTANT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
