@@ -3255,7 +3255,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     std::vector<uint32_t> ishape=inputs[0]->GetShape();
     std::vector<uint32_t> gshape=inputs[1]->GetShape();
     std::vector<uint32_t> bshape=inputs[2]->GetShape();
-    std::vector<uint32_t> oshape=inputs[3]->GetShape();
+    std::vector<uint32_t> oshape=outputs[0]->GetShape();
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Inputs Shape: %d %d %d %d\n", ishape[0], ishape[1], ishape[2], ishape[3]);
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Gamma Shape: %d %d %d %d\n", gshape[0], gshape[1], gshape[2], gshape[3]);
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Beta Shape: %d %d %d %d\n", bshape[0], bshape[1], bshape[2], bshape[3]);
