@@ -3253,6 +3253,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
     std::vector<uint32_t> shape=inputs[1]->GetShape();
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Weights Shape: %d %d %d %d\n", shape[0], shape[1], shape[2], shape[3]);
 
     std::vector<float> gamma(shape[0], 1.0f);
     std::vector<float> beta(shape[0], 0.0f);
