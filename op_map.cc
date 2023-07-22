@@ -3302,6 +3302,9 @@ std::vector<float> beta(shape[0], 0.0f);
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, beta.data());
 
+    gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size() * sizeof(float));
+    beta_tensor->CopyDataToTensor(beta.data(), beta.size() * sizeof(float));
+
     std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
       inputs[0],
       beta_tensor,
