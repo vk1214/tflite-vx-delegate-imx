@@ -3249,8 +3249,8 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
     auto axis = 0;//builtin->axis;
     auto eps = 1e-3;
-    auto pre_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::Dequantize();
-    auto post_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::Quantize>();
+    auto pre_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
+    auto post_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
     auto op =
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
