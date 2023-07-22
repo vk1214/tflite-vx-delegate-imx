@@ -3300,8 +3300,8 @@ auto beta = Dequantise(inputs[2], shape[0]);
 
     std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
       inputs[0],
-      gamma_tensor,
-      beta_tensor
+      beta_tensor,
+      gamma_tensor
     };
 
 
