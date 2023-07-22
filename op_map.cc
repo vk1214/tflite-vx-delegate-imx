@@ -3287,8 +3287,8 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
       ln_in_tensor,
-      gamma_tensor,
-      beta_tensor
+      beta_tensor,
+      gamma_tensor
     };
 
     (*op).BindInputs(input_tensors);
