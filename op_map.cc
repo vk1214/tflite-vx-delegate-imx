@@ -3283,8 +3283,8 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     delegate->GetOps().push_back(std::move(op));
 
-    delegate->GetTensors.push_back(std::move(gamma_tensor));
-    delegate->GetTensors.push_back(std::move(beta_tensor));
+    delegate->GetTensors().push_back(std::move(gamma_tensor));
+    delegate->GetTensors().push_back(std::move(beta_tensor));
 
     return true;
   }
