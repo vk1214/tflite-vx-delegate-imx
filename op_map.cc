@@ -2747,6 +2747,91 @@ struct Conv3dMapper : public Conv3dKind<TfLiteConv3DParams> {
   }
 };
 
+struct TfLiteLayerNormParams {
+  int axis;
+};
+/*
+  auto input_type = inputs[0]->GetDataType();
+  auto input_quant = inputs[0]->GetQuantization();
+  uint32_t kernel_size = kernel_h * kernel_w * channel * channel;
+  std::vector<uint8_t> weight_quant_data(kernel_size);
+
+  if (input_quant.Type() == tim::vx::QuantType::ASYMMETRIC) {
+    float scale = input_quant.Scales()[0];
+    int32_t zp = input_quant.ZeroPoints()[0];
+    if (input_type == tim::vx::DataType::INT8) {
+      std::vector<int8_t> quant_i8;
+      vx::delegate::utils::Quantize<int8_t>(weight_data, scale, zp, quant_i8);
+      weight_spec.SetDataType(tim::vx::DataType::INT8);
+      memcpy(weight_quant_data.data(), quant_i8.data(), kernel_size);
+    } else if (input_type == tim::vx::DataType::UINT8) {
+      std::vector<uint8_t> quant_u8;
+      vx::delegate::utils::Quantize<uint8_t>(weight_data, scale, zp, quant_u8);
+      weight_spec.SetDataType(tim::vx::DataType::UINT8);
+      memcpy(weight_quant_data.data(), quant_u8.data(), kernel_size);
+    }
+*/
+
+std::vector<float> Dequantise(std::shared_ptr<tim::vx::Tensor> t, size_t length)
+{
+  auto input_quant = t->GetQuantization();
+  TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Number of scales %zu", input_quant.Scales().size());
+  float scale = input_quant.Scales()[0];
+  int32_t zp = input_quant.ZeroPoints()[0];
+  std::vector<uint8_t> buffer(length);
+  t->CopyDataFromTensor(buffer.data());
+  std::vector<float> float_data(length);
+  std::transform(buffer.begin(), buffer.end(),float_data.begin(), [zp, scale](auto a){return (static_cast<float>(a)-zp)*scale;});
+
+  return float_data;
+}
+
+struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
+  bool HandleMapOp(vx::delegate::Delegate* delegate,
+                   std::vector<std::shared_ptr<tim::vx::Tensor>>& inputs,
+                   std::vector<std::shared_ptr<tim::vx::Tensor>>& outputs,
+                   const void* params) override {
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
+    const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
+    auto axis = 0;//builtin->axis;
+    auto eps = 1e-6;
+    auto op =
+        delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
+
+    std::vector<uint32_t> shape=inputs[1]->GetShape();
+//auto gamma = Dequantise(inputs[1], shape[0]);
+//auto beta = Dequantise(inputs[2], shape[0]);
+
+
+std::vector<float> gamma(shape[0], 1.0f);
+std::vector<float> beta(shape[0], 0.0f);
+
+    tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
+                                   {shape[0]},
+                                   tim::vx::TensorAttribute::CONSTANT);
+
+    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
+    auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, beta.data());
+
+    gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size() * sizeof(float));
+    beta_tensor->CopyDataToTensor(beta.data(), beta.size() * sizeof(float));
+
+    std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
+      inputs[0],
+      beta_tensor,
+      gamma_tensor
+    };
+
+
+    (*op).BindInputs(input_tensors);
+    (*op).BindOutputs(outputs);
+
+    delegate->GetOps().push_back(std::move(op));
+
+    return true;
+  }
+};
+
 using createIOpMapItemFunc = std::function<std::unique_ptr<IOpMapper>()>;
 static const std::map<int, createIOpMapItemFunc> reg = {
 #define REGISTER_OP_MAPPER(TFLITE_OP_CODE, MAPPER_TYPE, ...)                  \
@@ -2843,6 +2928,8 @@ static const std::map<int, createIOpMapItemFunc> reg = {
         kTfLiteBuiltinReluN1To1, SimpleOpMapper<tim::vx::ops::Relu1>, "Relu1"),
     REGISTER_OP_MAPPER(
         kTfLiteBuiltinRelu6, SimpleOpMapper<tim::vx::ops::Relu6>, "Relu6"),
+    REGISTER_OP_MAPPER(
+        kTfLiteBuiltinGelu, SimpleOpMapper<tim::vx::ops::Gelu>, "Gelu"),
     REGISTER_OP_MAPPER(kTfLiteBuiltinLogistic,
                        SimpleOpMapper<tim::vx::ops::Sigmoid>,
                        "Sigmoid"),
@@ -2895,6 +2982,7 @@ static const std::map<int, createIOpMapItemFunc> reg = {
     REGISTER_OP_MAPPER(
         kTfLiteBuiltinArgMax, ArgOpMapper<tim::vx::ops::ArgMax>, "Max"),
     REGISTER_OP_MAPPER(kTfLiteBuiltinConv3d, Conv3dMapper),
+    REGISTER_OP_MAPPER(kTfLiteBuiltinCustom, LayerNormMapper),
 
 #undef REGISTER_OP_MAPPER
 };
