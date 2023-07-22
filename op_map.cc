@@ -3288,11 +3288,15 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
         delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
 
     std::vector<uint32_t> shape=inputs[1]->GetShape();
-auto gamma = Dequantise(inputs[1], shape[0]);
-auto beta = Dequantise(inputs[2], shape[0]);
+//auto gamma = Dequantise(inputs[1], shape[0]);
+//auto beta = Dequantise(inputs[2], shape[0]);
+
+
+std::vector<float> gamma(1, 1.0f);
+std::vector<float> beta(1, 0.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
-                                   {shape[0]},
+                                   {1},
                                    tim::vx::TensorAttribute::CONSTANT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
