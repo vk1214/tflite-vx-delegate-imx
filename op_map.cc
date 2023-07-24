@@ -2793,6 +2793,24 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    const void* params) override {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
 
+    auto input_type = inputs[0]->GetDataType();
+    auto input_quant = inputs[0]->GetQuantization();
+
+    if (input_type == tim::vx::DataType::UINT8) {
+      TFLITE_LOG_PROD("Input UINT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
+    } else if (input_type == tim::vx::DataType::INT8) {
+      TFLITE_LOG_PROD("Input INT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
+    }
+
+    auto output_type = outputs[0]->GetDataType();
+    auto output_quant = outputs[0]->GetQuantization();
+
+    if (output_type == tim::vx::DataType::UINT8) {
+      TFLITE_LOG_PROD("Output UINT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
+    } else if (output_type == tim::vx::DataType::INT8) {
+      TFLITE_LOG_PROD("Output INT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
+    }
+
     auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 2e-5f);
 
     std::vector<uint32_t> shape=inputs[0]->GetShape();
@@ -2805,7 +2823,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
-                                   tim::vx::TensorAttribute::INPUT);
+                                   tim::vx::TensorAttribute::VARIABLE);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
