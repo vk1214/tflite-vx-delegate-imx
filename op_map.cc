@@ -2797,18 +2797,18 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     auto input_quant = inputs[0]->GetQuantization();
 
     if (input_type == tim::vx::DataType::UINT8) {
-      TFLITE_LOG_PROD("Input UINT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
+      TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Input UINT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
     } else if (input_type == tim::vx::DataType::INT8) {
-      TFLITE_LOG_PROD("Input INT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
+      TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Input INT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
     }
 
     auto output_type = outputs[0]->GetDataType();
     auto output_quant = outputs[0]->GetQuantization();
 
     if (output_type == tim::vx::DataType::UINT8) {
-      TFLITE_LOG_PROD("Output UINT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
+      TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Output UINT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
     } else if (output_type == tim::vx::DataType::INT8) {
-      TFLITE_LOG_PROD("Output INT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
+      TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Output INT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
     }
 
     auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 2e-5f);
