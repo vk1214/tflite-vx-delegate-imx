@@ -2823,7 +2823,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
-                                   tim::vx::TensorAttribute::VARIABLE);
+                                   tim::vx::TensorAttribute::CONSTANT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
