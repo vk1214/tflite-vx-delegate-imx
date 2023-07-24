@@ -2796,6 +2796,10 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     auto input_type = inputs[0]->GetDataType();
     auto input_quant = inputs[0]->GetQuantization();
 
+  if (input_quant.Type() == tim::vx::QuantType::ASYMMETRIC) {
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "ASYMMETRIC");
+  }
+
     if (input_type == tim::vx::DataType::UINT8) {
       TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Input UINT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
     } else if (input_type == tim::vx::DataType::INT8) {
