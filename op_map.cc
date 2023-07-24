@@ -2792,39 +2792,28 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    std::vector<std::shared_ptr<tim::vx::Tensor>>& outputs,
                    const void* params) override {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
-    const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
-    auto axis = 0;//builtin->axis;
-    auto eps = 2e-5;
-    auto op =
-        delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
+
+    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 2e-5f);
 
     std::vector<uint32_t> shape=inputs[0]->GetShape();
 //auto gamma = Dequantise(inputs[1], shape[0]);
 //auto beta = Dequantise(inputs[2], shape[0]);
 
 
-std::vector<float> gamma(shape[0], 1.0f);
-std::vector<float> beta(shape[0], 0.0f);
+    std::vector<float> gamma(shape[0], 1.0f);
+    std::vector<float> beta(shape[0], 0.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
                                    tim::vx::TensorAttribute::INPUT);
 
-    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, gamma.data());
-    auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec, beta.data());
+    auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
+    auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
 
     gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size());
     beta_tensor->CopyDataToTensor(beta.data(), beta.size());
 
-    std::vector<std::shared_ptr<tim::vx::Tensor>> input_tensors = {
-      inputs[0],
-      beta_tensor,
-      gamma_tensor
-    };
-
-
-    (*op).BindInputs(input_tensors);
-    (*op).BindOutputs(outputs);
+    (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
 
     delegate->GetOps().push_back(std::move(op));
 
