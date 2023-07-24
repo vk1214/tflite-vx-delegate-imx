@@ -528,7 +528,7 @@ TfLiteStatus Delegate::Prepare(const OpData& op_data,
 TfLiteStatus Delegate::Invoke(const OpData& op_data,
                               TfLiteContext* context,
                               TfLiteNode* node) {
-  TFLITE_LOG(TFLITE_LOG_INFO, "Delegate::Invoke node: %p", node->user_data);
+  TFLITE_LOG_PROD(TFLITE_LOG_INFO, "Delegate::Invoke node: %p", node->user_data);
   if (!compiled_) {
     // TODO(bo): Handling multi-thread use case
     context_ = tim::vx::Context::Create();
@@ -616,7 +616,7 @@ TfLiteStatus Delegate::Invoke(const OpData& op_data,
       std::vector<std::shared_ptr<tim::vx::Tensor>> states_tensors =
           MapIndexesToTensors(state_tensors_, states);
 
-      if (false/*!custom_name.empty()*/) {
+      if (!custom_name.empty() && custom_name != "LayerNorm") {
         vx::op_map::SupportedBuiltinCustomOps()
             .at(custom_name)
             ->MapOp(this,
