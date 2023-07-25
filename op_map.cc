@@ -2842,8 +2842,8 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
 
-    gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size());
-    beta_tensor->CopyDataToTensor(beta.data(), beta.size());
+    gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size()*sizeof(float));
+    beta_tensor->CopyDataToTensor(beta.data(), beta.size()*sizeof(float));
 
     (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
 
