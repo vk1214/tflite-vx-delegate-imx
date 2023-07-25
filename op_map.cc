@@ -2820,7 +2820,7 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
     } else if (output_type == tim::vx::DataType::INT8) {
       TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Output INT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
     }
-    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 2e-5f);
+    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 1e-9f);
 #if 0
 //auto gamma = Dequantise(inputs[1], shape[0]);
 //auto beta = Dequantise(inputs[2], shape[0]);
@@ -2841,10 +2841,10 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
 
-    (*gamma_op).BindInputs({inputs[2]}).BindOutputs({gamma_tensor});
-    (*beta_op).BindInputs({inputs[1]}).BindOutputs({beta_tensor});
+    (*gamma_op).BindInputs({inputs[1]}).BindOutputs({gamma_tensor});
+    (*beta_op).BindInputs({inputs[2]}).BindOutputs({beta_tensor});
 
-    (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
+    (*op).BindInputs({inputs[0], gamma_op, gamma_tensor}).BindOutputs({outputs[0]});
 
     delegate->GetOps().push_back(std::move(gamma_op));
     delegate->GetOps().push_back(std::move(beta_op));
