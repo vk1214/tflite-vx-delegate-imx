@@ -2832,8 +2832,8 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
 //auto beta = Dequantise(inputs[2], shape[0]);
 
 
-    std::vector<float> gamma(shape[0], 1.0f);
-    std::vector<float> beta(shape[0], 1.0f);
+    std::vector<float> gamma(shape[0], 10000000.0f);
+    std::vector<float> beta(shape[0], 10000000.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
