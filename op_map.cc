@@ -2823,7 +2823,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
 
     std::vector<float> gamma(shape[0], 1.0f);
-    std::vector<float> beta(shape[0], 0.0f);
+    std::vector<float> beta(shape[0], 1.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
