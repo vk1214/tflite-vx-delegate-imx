@@ -2794,9 +2794,11 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
 
-    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d", inputs[0]->GetShape().size()-builtin->axis);
+    int axis = 0; //inputs[0]->GetShape().size()-builtin->axis
 
-    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(inputs[0]->GetShape().size()-builtin->axis, 1e-6f);
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d", axis);
+
+    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, 1e-6f);
     auto gamma_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
     auto beta_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
 
