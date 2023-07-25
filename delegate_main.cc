@@ -671,7 +671,7 @@ TfLiteStatus Delegate::Invoke(const OpData& op_data,
   // TODO(derekjchow): Return error if compilation failed.
   for (int tensor_idx : op_data.subgraph_inputs) {
     const TfLiteTensor& tf_tensor = context->tensors[tensor_idx];
-    TFLITE_LOG(TFLITE_LOG_INFO, "Copying input %d: %s", tensor_idx, tf_tensor.name);
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Copying input %d: %s", tensor_idx, tf_tensor.name);
     auto src_input_tensor = tensors_[tensor_idx];
     if (!src_input_tensor.get()) {
       TFLITE_LOG_PROD(TFLITE_LOG_ERROR, "Failed to copy input tensor!");
@@ -726,8 +726,8 @@ TfLiteStatus Delegate::Invoke(const OpData& op_data,
 
   for (int tensor_idx : op_data.subgraph_outputs) {
     TfLiteTensor& tf_tensor = context->tensors[tensor_idx];
-    TFLITE_LOG(
-        TFLITE_LOG_INFO, "Copying output %d, %s", tensor_idx, tf_tensor.name);
+    TFLITE_LOG_PROD(
+        TFLITE_LOG_WARNING, "Copying output %d, %s", tensor_idx, tf_tensor.name);
 #ifdef MULTI_DEVICE_FEATURE_MODE
       void* tensor_data = reinterpret_cast<void*>(tf_tensor.data.raw);
       outputs_[tensor_index]->CopyDataFromTensor(tensor_data);

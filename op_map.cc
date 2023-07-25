@@ -2793,8 +2793,15 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    const void* params) override {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
 
-    auto input_type = inputs[0]->GetDataType();
-    auto input_quant = inputs[0]->GetQuantization();
+
+
+
+
+
+for(int i=0;i<inputs.size();i++)
+{
+    auto input_type = inputs[i]->GetDataType();
+    auto input_quant = inputs[i]->GetQuantization();
 
   if (input_quant.Type() == tim::vx::QuantType::ASYMMETRIC) {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "ASYMMETRIC");
@@ -2806,6 +2813,10 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
       TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Input INT8 - %f %d",input_quant.Scales()[0], input_quant.ZeroPoints()[0]);
     }
 
+    std::vector<uint32_t> shape=inputs[i]->GetShape();
+for(int j=0;j<shape.size();j++)
+TFLITE_LOG_PROD(TFLITE_LOG_WARNING, shape[j]);
+}
     auto output_type = outputs[0]->GetDataType();
     auto output_quant = outputs[0]->GetQuantization();
 
@@ -2814,7 +2825,6 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     } else if (output_type == tim::vx::DataType::INT8) {
       TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Output INT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
     }
-
     auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 2e-5f);
 
     std::vector<uint32_t> shape=inputs[0]->GetShape();
@@ -2835,7 +2845,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size());
     beta_tensor->CopyDataToTensor(beta.data(), beta.size());
 
-    (*op).BindInputs({inputs[1], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
+    (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
 
     delegate->GetOps().push_back(std::move(op));
 
