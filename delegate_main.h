@@ -118,7 +118,7 @@ class Delegate {
   std::map<int32_t, std::shared_ptr<tim::vx::Tensor>>& GetTensors() {
     return tensors_;
   }
-  std::vector<shared_ptr<tim::vx::Tensor>> other_tensors;
+  std::vector<std::shared_ptr<tim::vx::Tensor>> other_tensors;
 
  private:
   struct OperationDataType {
