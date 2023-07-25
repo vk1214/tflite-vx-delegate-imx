@@ -726,8 +726,8 @@ TfLiteStatus Delegate::Invoke(const OpData& op_data,
 
   for (int tensor_idx : op_data.subgraph_outputs) {
     TfLiteTensor& tf_tensor = context->tensors[tensor_idx];
-    TFLITE_LOG_PROD(
-        TFLITE_LOG_WARNING, "Copying output %d, %s", tensor_idx, tf_tensor.name);
+    TFLITE_LOG(
+        TFLITE_LOG_INFO, "Copying output %d, %s", tensor_idx, tf_tensor.name);
 #ifdef MULTI_DEVICE_FEATURE_MODE
       void* tensor_data = reinterpret_cast<void*>(tf_tensor.data.raw);
       outputs_[tensor_index]->CopyDataFromTensor(tensor_data);

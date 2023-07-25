@@ -2750,41 +2750,6 @@ struct Conv3dMapper : public Conv3dKind<TfLiteConv3DParams> {
 struct TfLiteLayerNormParams {
   int axis;
 };
-/*
-  auto input_type = inputs[0]->GetDataType();
-  auto input_quant = inputs[0]->GetQuantization();
-  uint32_t kernel_size = kernel_h * kernel_w * channel * channel;
-  std::vector<uint8_t> weight_quant_data(kernel_size);
-
-  if (input_quant.Type() == tim::vx::QuantType::ASYMMETRIC) {
-    float scale = input_quant.Scales()[0];
-    int32_t zp = input_quant.ZeroPoints()[0];
-    if (input_type == tim::vx::DataType::INT8) {
-      std::vector<int8_t> quant_i8;
-      vx::delegate::utils::Quantize<int8_t>(weight_data, scale, zp, quant_i8);
-      weight_spec.SetDataType(tim::vx::DataType::INT8);
-      memcpy(weight_quant_data.data(), quant_i8.data(), kernel_size);
-    } else if (input_type == tim::vx::DataType::UINT8) {
-      std::vector<uint8_t> quant_u8;
-      vx::delegate::utils::Quantize<uint8_t>(weight_data, scale, zp, quant_u8);
-      weight_spec.SetDataType(tim::vx::DataType::UINT8);
-      memcpy(weight_quant_data.data(), quant_u8.data(), kernel_size);
-    }
-*/
-
-std::vector<float> Dequantise(std::shared_ptr<tim::vx::Tensor> t, size_t length)
-{
-  auto input_quant = t->GetQuantization();
-  TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Number of scales %zu", input_quant.Scales().size());
-  float scale = input_quant.Scales()[0];
-  int32_t zp = input_quant.ZeroPoints()[0];
-  std::vector<uint8_t> buffer(length);
-  t->CopyDataFromTensor(buffer.data());
-  std::vector<float> float_data(length);
-  std::transform(buffer.begin(), buffer.end(),float_data.begin(), [zp, scale](auto a){return (static_cast<float>(a)-zp)*scale;});
-
-  return float_data;
-}
 
 struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
   bool HandleMapOp(vx::delegate::Delegate* delegate,
