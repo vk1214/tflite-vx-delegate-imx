@@ -2815,7 +2815,7 @@ for(int i=0;i<inputs.size();i++)
 
     std::vector<uint32_t> shape=inputs[i]->GetShape();
 for(int j=0;j<shape.size();j++)
-TFLITE_LOG_PROD(TFLITE_LOG_WARNING, shape[j]);
+TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
 }
     auto output_type = outputs[0]->GetDataType();
     auto output_quant = outputs[0]->GetQuantization();
