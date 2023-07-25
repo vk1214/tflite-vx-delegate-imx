@@ -528,7 +528,7 @@ TfLiteStatus Delegate::Prepare(const OpData& op_data,
 TfLiteStatus Delegate::Invoke(const OpData& op_data,
                               TfLiteContext* context,
                               TfLiteNode* node) {
-  TFLITE_LOG_PROD(TFLITE_LOG_INFO, "Delegate::Invoke node: %p", node->user_data);
+  TFLITE_LOG(TFLITE_LOG_INFO, "Delegate::Invoke node: %p", node->user_data);
   if (!compiled_) {
     // TODO(bo): Handling multi-thread use case
     context_ = tim::vx::Context::Create();
@@ -671,7 +671,7 @@ TfLiteStatus Delegate::Invoke(const OpData& op_data,
   // TODO(derekjchow): Return error if compilation failed.
   for (int tensor_idx : op_data.subgraph_inputs) {
     const TfLiteTensor& tf_tensor = context->tensors[tensor_idx];
-    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Copying input %d: %s", tensor_idx, tf_tensor.name);
+    TFLITE_LOG(TFLITE_LOG_INFO, "Copying input %d: %s", tensor_idx, tf_tensor.name);
     auto src_input_tensor = tensors_[tensor_idx];
     if (!src_input_tensor.get()) {
       TFLITE_LOG_PROD(TFLITE_LOG_ERROR, "Failed to copy input tensor!");
