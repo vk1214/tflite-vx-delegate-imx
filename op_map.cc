@@ -2833,7 +2833,7 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
 
 
     std::vector<float> gamma(shape[0], 1.0f);
-    std::vector<float> beta(shape[0], 0.0f);
+    std::vector<float> beta(shape[0], 1.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
@@ -2844,6 +2844,9 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
 
     gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size()*sizeof(float));
     beta_tensor->CopyDataToTensor(beta.data(), beta.size()*sizeof(float));
+
+    delegate->other_tensors.push_back(gamma_tensor);
+    delegate->other_tensors.push_back(beta_tensor);
 
     (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
 
