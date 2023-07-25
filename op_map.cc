@@ -2835,7 +2835,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size());
     beta_tensor->CopyDataToTensor(beta.data(), beta.size());
 
-    (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
+    (*op).BindInputs({inputs[1], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
 
     delegate->GetOps().push_back(std::move(op));
 
