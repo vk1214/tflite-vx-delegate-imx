@@ -2793,7 +2793,7 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    const void* params) override {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
 
-    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 1e-9f);
+    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 1e-7f);
 #if 0
     std::vector<uint32_t> shape=inputs[0]->GetShape();
 //auto gamma = Dequantise(inputs[1], shape[0]);
