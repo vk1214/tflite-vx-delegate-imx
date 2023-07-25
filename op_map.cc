@@ -2793,11 +2793,6 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    const void* params) override {
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op");
 
-
-
-
-
-
 for(int i=0;i<inputs.size();i++)
 {
     auto input_type = inputs[i]->GetDataType();
@@ -2826,30 +2821,33 @@ TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "%d", shape[j]);
       TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Output INT8 - %f %d",output_quant.Scales()[0], output_quant.ZeroPoints()[0]);
     }
     auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(0, 2e-5f);
-
-    std::vector<uint32_t> shape=inputs[0]->GetShape();
+#if 0
 //auto gamma = Dequantise(inputs[1], shape[0]);
 //auto beta = Dequantise(inputs[2], shape[0]);
-
-
-    std::vector<float> gamma(shape[0], 10000000.0f);
-    std::vector<float> beta(shape[0], 10000000.0f);
+    std::vector<float> gamma(shape[0], 1.0f);
+    std::vector<float> beta(shape[0], 0.0f);
 
     tim::vx::TensorSpec gammabeta_spec(tim::vx::DataType::FLOAT32,
                                    {shape[0]},
                                    tim::vx::TensorAttribute::CONSTANT);
+#endif
+    std::vector<uint32_t> gshape=inputs[1]->GetShape();
+
+    auto gamma_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
+    auto beta_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
+
+    auto gammabeta_spec = tim::vx::TensorSpec(tim::vx::DataType::FLOAT32, gshape, tim::vx::TensorAttribute::TRANSIENT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
 
-    gamma_tensor->CopyDataToTensor(gamma.data(), gamma.size()*sizeof(float));
-    beta_tensor->CopyDataToTensor(beta.data(), beta.size()*sizeof(float));
-
-    delegate->other_tensors.push_back(gamma_tensor);
-    delegate->other_tensors.push_back(beta_tensor);
+    (*gamma_op).BindInputs({inputs[1]}).BindOutputs({gamma_tensor});
+    (*beta_op).BindInputs({inputs[2]}).BindOutputs({beta_tensor});
 
     (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
 
+    delegate->GetOps().push_back(std::move(gamma_op));
+    delegate->GetOps().push_back(std::move(beta_op));
     delegate->GetOps().push_back(std::move(op));
 
     return true;
