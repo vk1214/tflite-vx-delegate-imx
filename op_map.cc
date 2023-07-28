@@ -2759,8 +2759,8 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    const void* params) override {
 
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
-    int axis = 0;//(inputs[0]->GetShape().size() - 1) - builtin->axis;
-    float eps = 0;//builtin->eps;
+    int axis = (inputs[0]->GetShape().size() - 1) - builtin->axis;
+    float eps = builtin->eps;
 
     TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d, eps %f", axis, eps);
 
