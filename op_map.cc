@@ -2749,6 +2749,7 @@ struct Conv3dMapper : public Conv3dKind<TfLiteConv3DParams> {
 
 struct TfLiteLayerNormParams {
   int axis;
+  float eps;
 };
 
 struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
@@ -2759,11 +2760,11 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
 
-    int axis = 0; //inputs[0]->GetShape().size()-builtin->axis
+    int axis = (inputs[0]->GetShape().size() - 1) - builtin->axis;
 
-    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d", axis);
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d, eps %f", axis, builtin->eps);
 
-    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, 1e-6f);
+    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, builtin->eps);
     auto gamma_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
     auto beta_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
 
