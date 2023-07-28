@@ -352,7 +352,7 @@ void VxDelegateDelete(TfLiteDelegate* delegate) {
 bool Delegate::SupportedOp(TfLiteContext* context,
                            TfLiteNode* node,
                            const TfLiteRegistration* registration) {
-  if ((registration->custom_name != nullptr) && (registration->custom_name != "LayerNorm")) {
+  if ((registration->custom_name != nullptr)/* && (registration->custom_name != "LayerNorm")*/) {
     const auto& supported_custom_ops = vx::op_map::SupportedBuiltinCustomOps();
     const auto& it = supported_custom_ops.find(registration->custom_name);
     if (supported_custom_ops.end() != it) {
@@ -474,7 +474,7 @@ std::unique_ptr<vx::delegate::OpData> Delegate::Init(
         operation.custom_name = reg->custom_name;
       }
       operation.builtin_code = reg->builtin_code;
-      bool isbuiltinOp = operation.custom_name.empty() || (operation.custom_name == "LayerNorm");
+      bool isbuiltinOp = operation.custom_name.empty() /*|| (operation.custom_name == "LayerNorm")*/;
       std::copy(
           inputs.begin(), inputs.end(), std::back_inserter(operation.inputs));
       std::copy(outputs.begin(),
@@ -616,7 +616,7 @@ TfLiteStatus Delegate::Invoke(const OpData& op_data,
       std::vector<std::shared_ptr<tim::vx::Tensor>> states_tensors =
           MapIndexesToTensors(state_tensors_, states);
 
-      if (!custom_name.empty() && custom_name != "LayerNorm") {
+      if (!custom_name.empty() /*&& custom_name != "LayerNorm"*/) {
         vx::op_map::SupportedBuiltinCustomOps()
             .at(custom_name)
             ->MapOp(this,

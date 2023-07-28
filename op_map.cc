@@ -2759,12 +2759,12 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    const void* params) override {
 
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
+    int axis = 0;//(inputs[0]->GetShape().size() - 1) - builtin->axis;
+    float eps = 0;//builtin->eps;
 
-    int axis = (inputs[0]->GetShape().size() - 1) - builtin->axis;
+    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d, eps %f", axis, eps);
 
-    TFLITE_LOG_PROD(TFLITE_LOG_WARNING, "Create LayerNorm op axis %d, eps %f", axis, builtin->eps);
-
-    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, builtin->eps);
+    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
     auto gamma_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
     auto beta_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
 
@@ -2938,7 +2938,6 @@ static const std::map<int, createIOpMapItemFunc> reg = {
     REGISTER_OP_MAPPER(
         kTfLiteBuiltinArgMax, ArgOpMapper<tim::vx::ops::ArgMax>, "Max"),
     REGISTER_OP_MAPPER(kTfLiteBuiltinConv3d, Conv3dMapper),
-    REGISTER_OP_MAPPER(kTfLiteBuiltinCustom, LayerNormMapper),
 
 #undef REGISTER_OP_MAPPER
 };
@@ -2972,6 +2971,7 @@ static const std::map<std::string, createIOpMapItemFunc> custom_reg = {
 
     REGISTER_CUSTOM_OP("WRNN_BIDI_SEQGRU", CustomOpMap),
     REGISTER_CUSTOM_OP("vsi-npu", NBGOpMap),
+    REGISTER_CUSTOM_OP("LayerNorm", LayerNormMapper),
 #undef REGISTER_CUSTOM_OP
 };
 
