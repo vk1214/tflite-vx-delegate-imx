@@ -2784,6 +2784,8 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
 
     return true;
   }
+
+  virtual size_t GetParamSize() const override { return sizeof(TfLiteLayerNormParams); }
 };
 
 using createIOpMapItemFunc = std::function<std::unique_ptr<IOpMapper>()>;
