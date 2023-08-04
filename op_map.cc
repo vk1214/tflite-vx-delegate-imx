@@ -2911,16 +2911,22 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
                    std::vector<std::shared_ptr<tim::vx::Tensor>>& inputs,
                    std::vector<std::shared_ptr<tim::vx::Tensor>>& outputs,
                    const void* params) override {
-
     const auto builtin = reinterpret_cast<const TfLiteLayerNormParams*>(params);
     int axis = (inputs[0]->GetShape().size() - 1) - builtin->axis;
     float eps = builtin->eps;
-    
-    auto op = delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(axis, eps);
-    auto gamma_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
-    auto beta_op = delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
 
-    auto gammabeta_spec = tim::vx::TensorSpec(tim::vx::DataType::FLOAT32, inputs[1]->GetShape(), tim::vx::TensorAttribute::TRANSIENT);
+    auto op =
+        delegate->GetGraph()->CreateOperation<tim::vx::ops::LayerNormalization>(
+            axis, eps);
+    auto gamma_op =
+        delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
+    auto beta_op =
+        delegate->GetGraph()->CreateOperation<tim::vx::ops::DataConvert>();
+
+    auto gammabeta_spec =
+        tim::vx::TensorSpec(tim::vx::DataType::FLOAT32,
+                            inputs[1]->GetShape(),
+                            tim::vx::TensorAttribute::TRANSIENT);
 
     auto gamma_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
     auto beta_tensor = delegate->GetGraph()->CreateTensor(gammabeta_spec);
@@ -2928,7 +2934,9 @@ struct LayerNormMapper : public OpMapperBase<TfLiteLayerNormParams> {
     (*gamma_op).BindInputs({inputs[1]}).BindOutputs({gamma_tensor});
     (*beta_op).BindInputs({inputs[2]}).BindOutputs({beta_tensor});
 
-    (*op).BindInputs({inputs[0], beta_tensor, gamma_tensor}).BindOutputs({outputs[0]});
+    (*op)
+        .BindInputs({inputs[0], beta_tensor, gamma_tensor})
+        .BindOutputs({outputs[0]});
 
     delegate->GetOps().push_back(std::move(gamma_op));
     delegate->GetOps().push_back(std::move(beta_op));
@@ -2949,6 +2957,29 @@ struct NBGOpMap : public OpMapperBase<TfLiteVsiNpuParams> {
         reinterpret_cast<const char*>(builtin->binary),
         builtin->input_count,
         builtin->output_cout);
+
+    // WARNING!
+    // JM Added this code because caching didn't work when a model has
+    // multiple outputs.  It seems the NBG op in timvx reorders the outputs
+    // in order of tensor size.  We need to do the same or the caching fails.
+    if (outputs.size() > 1) {
+      std::sort(outputs.begin(),
+                outputs.end(),
+                [](const std::shared_ptr<tim::vx::Tensor>& a,
+                   const std::shared_ptr<tim::vx::Tensor>& b) {
+                  const uint64_t size_a =
+                      std::accumulate(a->GetShape().begin(),
+                                      a->GetShape().end(),
+                                      uint64_t{1},
+                                      std::multiplies<uint64_t>());
+                  const uint64_t size_b =
+                      std::accumulate(b->GetShape().begin(),
+                                      b->GetShape().end(),
+                                      uint64_t{1},
+                                      std::multiplies<uint64_t>());
+                  return size_a > size_b;
+                });
+    }
 
     (*op).BindInputs(inputs);
     (*op).BindOutputs(outputs);
